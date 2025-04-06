@@ -53,7 +53,10 @@ namespace DistLoad.Metrics
                 try
                 {
                     var response = await _httpClient.GetStringAsync($"{server.Address}/api/status");
-                    var status = JsonSerializer.Deserialize<ServerState>(response);
+                    //var status = JsonSerializer.Deserialize<ServerState>(response);
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var status = JsonSerializer.Deserialize<ServerState>(response, options);
+
 
                     if (status != null)
                     {
