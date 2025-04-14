@@ -2,6 +2,8 @@
 {
     public class ServerInstance
     {
+        internal ServerState LastState;
+
         public string Id { get; set; }
         public string Address { get; set; } 
         public int ActiveRequests { get; set; }
