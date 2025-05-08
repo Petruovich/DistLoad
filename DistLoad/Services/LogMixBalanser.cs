@@ -7,8 +7,8 @@ namespace DistLoad.Services
     public class LogMixBalanser : ILoadBalancer
     {
         private readonly List<ServerInstance> _servers;
-        private const double StaticWeight = 100.0;     
-        private const double LoadCoefficient = 0.5;    
+        private const double StaticWeight = 100.0;
+        private const double LoadCoefficient = 0.5;
 
         public LogMixBalanser(List<ServerInstance> servers)
         {
@@ -41,28 +41,13 @@ namespace DistLoad.Services
         private double CalculateScore(ServerState state)
         {
             double responseTime = state.ResponseTime > 0 ? state.ResponseTime : 1;
-            double activeRequests = state.
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                ActiveRequests >= 0 ? state.ActiveRequests : 0;
+            double activeRequests = state.ActiveRequests >= 0 ? state.ActiveRequests : 0;
 
             double denominator = Math.Log(1 + responseTime + LoadCoefficient * activeRequests);
-            denominator = denominator > 0 ? denominator : 1; // Захист від ділення на 0
+            denominator = denominator > 0 ? denominator : 1;
 
             return StaticWeight / denominator;
         }
-
         public List<ServerInstance> GetServers() => _servers;
     }
 }
