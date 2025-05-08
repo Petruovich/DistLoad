@@ -22,6 +22,5 @@ namespace DistLoad.Services
                 return Task.FromResult(_servers[_lastIndex]);
             }
         public List<ServerInstance> GetServers() => _servers;
-    }
-
-    }
+        }
+}

@@ -1,14 +1,18 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using DistLoad.Services;
+using DistLoad.Models;
 
 public class LoadBalancerMiddleware
 {
     private readonly LoadBalancerManager _manager;
     private readonly RequestDelegate _next;
+
+    private static readonly ConcurrentDictionary<string, int> _serverCounters = new();
 
     public LoadBalancerMiddleware(RequestDelegate next, LoadBalancerManager manager)
     {
@@ -18,7 +22,6 @@ public class LoadBalancerMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-
         if (context.Request.Path.StartsWithSegments("/swagger") ||
             context.Request.Path.StartsWithSegments("/metrics"))
         {
@@ -27,26 +30,39 @@ public class LoadBalancerMiddleware
         }
 
         var server = await _manager.GetNextServerAsync();
+
         if (server != null)
         {
-            var targetUri = new Uri($"{server.Address}{context.Request.Path}{context.Request.QueryString}");
-            var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUri);
+            _serverCounters.AddOrUpdate(server.Id, 1, (key, count) => count + 1);
 
-            foreach (var header in context.Request.Headers)
+            Console.WriteLine($"[Request] -> Server {server.Id} | Total: {_serverCounters[server.Id]}");
+
+            try
             {
-                requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                var targetUri = new Uri($"{server.Address}{context.Request.Path}{context.Request.QueryString}");
+                var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUri);
+
+                foreach (var header in context.Request.Headers)
+                {
+                    requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                }
+
+                using var client = new HttpClient();
+                var response = await client.SendAsync(requestMessage);
+
+                context.Response.StatusCode = (int)response.StatusCode;
+                foreach (var header in response.Headers)
+                {
+                    context.Response.Headers[header.Key] = header.Value.ToArray();
+                }
+
+                await response.Content.CopyToAsync(context.Response.Body);
             }
-
-            using var client = new HttpClient();
-            var response = await client.SendAsync(requestMessage);
-
-            context.Response.StatusCode = (int)response.StatusCode;
-            foreach (var header in response.Headers)
+            catch (Exception ex)
             {
-                context.Response.Headers[header.Key] = header.Value.ToArray();
+                context.Response.StatusCode = 502;
+                await context.Response.WriteAsync($"Proxy error: {ex.Message}");
             }
-
-            await response.Content.CopyToAsync(context.Response.Body);
         }
         else
         {

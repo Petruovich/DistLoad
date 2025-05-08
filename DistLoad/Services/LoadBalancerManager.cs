@@ -47,6 +47,10 @@ namespace DistLoad.Services
                     _currentBalancer = new AdaptiveBalancer(_servers);
                     _currentAlgorithm = "adaptive";
                     break;
+                case "logmix":
+                    _currentBalancer = new LogMixBalanser(_servers);
+                    _currentAlgorithm = "logmix";
+                    break;
                 default:
                     return false;
             }

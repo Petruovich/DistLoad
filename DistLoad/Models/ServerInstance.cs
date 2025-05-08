@@ -2,7 +2,7 @@
 {
     public class ServerInstance
     {
-        internal ServerState LastState;
+        //internal ServerState LastState;
 
         public string Id { get; set; }
         public string Address { get; set; } 
@@ -10,6 +10,7 @@
         public bool IsOnline { get; set; } = true;
         public bool IsAvailable => ActiveRequests < 100;
         public int CpuUsage { get; set; } = 0;
-
+        public int RequestCount { get; set; } = 0;
+        public ServerState LastState { get; internal set; }
     }
 }
