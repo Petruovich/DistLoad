@@ -8,9 +8,9 @@ namespace DistLoad.Controllers
     [ApiController]
     public class MetricsController : ControllerBase
     {
-        private readonly PrometheusExporter _metricsExporter;
+        private readonly MetricsLogger _metricsExporter;
 
-        public MetricsController(PrometheusExporter metricsExporter)
+        public MetricsController(MetricsLogger metricsExporter)
         {
             _metricsExporter = metricsExporter;
         }
@@ -20,9 +20,9 @@ namespace DistLoad.Controllers
         {
             return Ok(new
             {
-                cpuUsage = PrometheusExporter.CpuUsageGauge.Value,       
-                activeRequests = PrometheusExporter.ActiveRequestsGauge.Value, 
-                totalRequests = PrometheusExporter.TotalRequestsCounter.Value  
+                cpuUsage = MetricsLogger.CpuUsageGauge.Value,       
+                activeRequests = MetricsLogger.ActiveRequestsGauge.Value, 
+                totalRequests = MetricsLogger.TotalRequestsCounter.Value  
             });
         }
     }
